@@ -19,10 +19,12 @@ ui <- dashboardPage(
 
    fluidRow(
    box(title = "Settings", width = 3,
+       tagList(
      shiny::selectInput("baui_bdb", "BrAPI database", ndb),
      shiny::checkboxInput("baui_chk_prg", "Use Breeding Programs as filter", value = FALSE),
      shiny::uiOutput("baui_prgs"),
      shiny::uiOutput("baui_stds")
+       )
    ),
 
    # Show a plot of the generated distribution
@@ -53,9 +55,7 @@ ui <- dashboardPage(
 
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
+baui_fb <- function(input, output, session) {
   con <- reactive({
     brapi::ba_db()[[input$baui_bdb]]
   })
@@ -82,6 +82,40 @@ server <- function(input, output) {
       return(std)
     })
   })
+
+}
+
+# Define server logic required to draw a histogram
+server <- function(input, output, session) {
+
+  #baui_fb(input, output, session)
+  con <- reactive({
+    brapi::ba_db()[[input$baui_bdb]]
+  })
+
+  data_prg <- reactive({
+    withProgress(message = "Connecting", detail = "Loading programs",{
+      brapi::ba_programs(con())
+    })
+  })
+
+  data_std <- reactive({
+    withProgress(message = "Connecting", detail = "Loading studies",  {
+      std <- brapi::ba_studies_search(con())
+      if (input$baui_chk_prg) {
+        std <- std[std$programDbId == input$progrs, ]
+      }
+      return(std)
+    })
+  })
+
+  data_fdb <- reactive({
+    withProgress(message = "Connecting", detail = "Loading fieldbook",  {
+      std <- brapi::ba_studies_table(con(), input$studs)
+      return(std)
+    })
+  })
+  #########
 
   output$con_det <- renderPrint({
     req(input$baui_bdb)
