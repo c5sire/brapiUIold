@@ -8,6 +8,17 @@ bdb <- brapi::ba_db()
 ndb <- names(bdb)
 ndb <- ndb[!ndb %in% "mockbase"]
 
+baui_connect <- function() {
+  tagList(
+    shiny::selectInput("baui_bdb", "BrAPI database", ndb),
+    shiny::checkboxInput("baui_chk_prg", "Use Breeding Programs as filter", value = FALSE),
+    shiny::uiOutput("baui_prgs"),
+    shiny::uiOutput("baui_stds"),
+
+    shiny::verbatimTextOutput("baui_prms")
+  )
+}
+
 # Define UI for application that draws a histogram
 ui <- dashboardPage(
 
@@ -19,12 +30,7 @@ ui <- dashboardPage(
 
    fluidRow(
    box(title = "Settings", width = 3,
-       tagList(
-     shiny::selectInput("baui_bdb", "BrAPI database", ndb),
-     shiny::checkboxInput("baui_chk_prg", "Use Breeding Programs as filter", value = FALSE),
-     shiny::uiOutput("baui_prgs"),
-     shiny::uiOutput("baui_stds")
-       )
+      baui_connect()
    ),
 
    # Show a plot of the generated distribution
@@ -83,10 +89,23 @@ baui_fb <- function(input, output, session) {
     })
   })
 
+  return(
+    list(con = con(),
+         data_prg = data_prg(),
+         data_std = data_std(),
+         data_fdb = data_fdb()
+         )
+  )
 }
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+
+  # values <-
+  #   baui_fb(input, output, session)
+
+
+
 
   #baui_fb(input, output, session)
   con <- reactive({
@@ -111,10 +130,29 @@ server <- function(input, output, session) {
 
   data_fdb <- reactive({
     withProgress(message = "Connecting", detail = "Loading fieldbook",  {
-      std <- brapi::ba_studies_table(con(), input$studs)
+      std <- brapi::ba_studies_table(con(), input$studs, rclass = "data.frame")
       return(std)
     })
   })
+
+  data_prm <- reactive({
+    nms <- names(data_fdb())
+    fil <- stringr::str_detect(nms, "\\|")
+    fcs <- nms[!fil]
+    vrs <- nms[fil]
+    dat <- data_fdb()
+    list(
+      dsgn = unique(dat[, "studyDesign"]),
+      year = unique(dat[, "studyYear"]),
+      env  = unique(dat[, "locationName"]),
+      geno = unique(dat[, "germplasmName"]),
+      blk  = unique(dat[, "blockNumber"]),
+      rep  = unique(dat[, "replicate"]),
+      fac  = fcs,
+      vrs  = vrs
+    )
+  })
+
   #########
 
   output$con_det <- renderPrint({
@@ -132,6 +170,7 @@ server <- function(input, output, session) {
     } else {
       dat <- NULL
     }
+    if (!is.data.frame(dat)) return(NULL)
 
     dat
   })
@@ -142,6 +181,7 @@ server <- function(input, output, session) {
 
       dats <- t(data_std()[data_std()$studyDbId == input$studs, ])
       dats <- as.data.frame(cbind(row.names(dats), dats))[, 1:2]
+      if (!is.data.frame(dats)) return(NULL)
       names(dats) <- c("Variable", "Value")
     dats
   })
@@ -151,6 +191,8 @@ server <- function(input, output, session) {
     req(input$studs)
 
     dat <- data_fdb()
+
+    if (!is.data.frame(dat)) return(NULL)
 
     datatable(dat)
   })
@@ -173,6 +215,22 @@ server <- function(input, output, session) {
 
     selectInput("studs", "Breeding studies (fieldbooks)", choices = std,
                 selected = std[1])
+  })
+
+  output$baui_geno <- renderUI({
+    req(input$studs)
+    if (!is.data.frame(data_fdb())) return(NULL)
+
+    facs <- names(data_fdb())
+    filt <- !stringr::str_detect(facs, "\\|")
+    facs <- facs[!filt]
+    selectInput("geno", "Genotypes", choices = facs, selected = "germplasmName")
+  })
+
+
+  output$baui_prms <- renderPrint({
+    req(input$studs)
+    data_prm()
   })
 
 
