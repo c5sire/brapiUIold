@@ -7,7 +7,7 @@ baui_connect <- function() {
   bdb <- brapi::ba_db()
 
   ndb <- names(bdb)
-  ndb <- ndb[!ndb %in% "mockbase"]
+  ndb <- ndb[!ndb %in% c("mockbase", "ricebase")]
   ndb <- ndb[stringr::str_detect(ndb, "base")]
 
   shiny::tagList(
