@@ -8,8 +8,9 @@ baui_connect <- function() {
 
   ndb <- names(bdb)
   ndb <- ndb[!ndb %in% "mockbase"]
+  ndb <- ndb[stringr::str_detect(ndb, "base")]
 
-  tagList(
+  shiny::tagList(
     shiny::selectInput("baui_bdb", "BrAPI database", ndb),
     shiny::checkboxInput("baui_chk_prg", "Use Breeding Programs as filter", value = FALSE),
     shiny::uiOutput("baui_prgs"),

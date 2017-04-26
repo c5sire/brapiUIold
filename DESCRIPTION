@@ -5,7 +5,7 @@ Authors@R: person("Reinhard", "Simon",
   email = "rsimon64@gmail.com", role = c("aut", "cre"))
 Description: Provides widgets using shiny to add an user interface to the brapi R library.
 Depends: R (>= 3.3.3)
-License: WGPL-3
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

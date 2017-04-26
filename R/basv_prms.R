@@ -49,16 +49,16 @@ basv_prms <- function(input, output, session){
     dpt <- nrow(dat[, vrs]) * length(vrs)
 
     list(
-      comp = com,
-      dtpt = dpt,
-      dsgn = unique(dat[, "studyDesign"]),
+      completeness = com,
+      datapoints = dpt,
+      design = unique(dat[, "studyDesign"]),
       year = unique(dat[, "studyYear"]),
-      env  = unique(dat[, "locationName"]),
-      geno = unique(dat[, "germplasmName"]),
-      blk  = unique(dat[, "blockNumber"]),
-      rep  = unique(dat[, "replicate"]),
-      fac  = fcs,
-      vrs  = vrs
+      environment  = unique(dat[, "locationName"]),
+      genotype = unique(dat[, "germplasmName"]),
+      block  = unique(dat[, "blockNumber"]),
+      repetition  = unique(dat[, "replicate"]),
+      factors  = fcs,
+      variables  = vrs
     )
   })
 
