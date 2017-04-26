@@ -13,8 +13,13 @@ ui <- dashboardPage(
   dashboardBody(
 
    fluidRow(
-   box(title = "Settings", width = 4,
+   shinydashboard::tabBox(width = 4,
+     tabPanel(title = "About",
+       HTML("This is a small demo of using the BrAPI protocol to access phenotypic trial data.")
+     ),
+     tabPanel(title = "Settings",
       brapiUI::baui_connect()
+     )
    ),
    box(title = "Fieldbook overview", width = 8,
       shiny::verbatimTextOutput("baui_prms")
